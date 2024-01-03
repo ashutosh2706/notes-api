@@ -1,0 +1,13 @@
+total 50
+drwxr-xr-x 1 AshutoshMishra 197121    0 Dec  6 17:43 .
+drwxr-xr-x 1 AshutoshMishra 197121    0 Dec  6 17:43 ..
+-rwxr-xr-x 1 AshutoshMishra 197121 1938 Nov 23 18:54 7zipper.lnk
+drwxr-xr-x 1 AshutoshMishra 197121    0 Dec  6 15:03 Code
+-rwxr-xr-x 1 AshutoshMishra 197121 2198 Nov 23 10:44 Git Bash.lnk
+-rwxr-xr-x 1 AshutoshMishra 197121 1940 Nov 27 09:45 MongoDB Compass.lnk
+-rwxr-xr-x 1 AshutoshMishra 197121 2230 Nov 24 11:09 Postman.lnk
+-rwxr-xr-x 1 AshutoshMishra 197121 2071 Dec  1 10:05 Sublime Text.lnk
+-rwxr-xr-x 1 AshutoshMishra 197121  926 Nov 30 10:19 VS Code.lnk
+-rw-r--r-- 1 AshutoshMishra 197121    0 Dec  6 17:43 desk.txt
+-rw-r--r-- 1 AshutoshMishra 197121  282 Nov  1 13:26 desktop.ini
+-rw-r--r-- 1 AshutoshMishra 197121   87 Nov 22 10:23 path_var.bat

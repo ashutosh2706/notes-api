@@ -12,13 +12,13 @@ public class Note {
 	@Id
 	@GeneratedValue
 	private Long id;
-	private String fileName, subject, author, uploadDate, noteID;
-	
+	private String fileName, subject, author, uploadDate, noteID, size;
+	private int download_count;
+
 	public Note() {
 		super();
 	}
-
-	public Note(Long id, String fileName, String subject, String author, String uploadDate, String noteID) {
+	public Note(Long id, String fileName, String subject, String author, String uploadDate, String noteID, int downloadCount, String size) {
 		super();
 		this.id = id;
 		this.fileName = fileName;
@@ -26,10 +26,28 @@ public class Note {
 		this.author = author;
 		this.uploadDate = uploadDate;
 		this.noteID = noteID;
-	}
+		this.size = size;
+        this.download_count = downloadCount;
+    }
 
 	public String getNoteID() {
 		return noteID;
+	}
+
+	public int getDownload_count() {
+		return download_count;
+	}
+
+	public void setDownload_count(int download_count) {
+		this.download_count = download_count;
+	}
+
+	public String getSize() {
+		return size;
+	}
+
+	public void setSize(String size) {
+		this.size = size;
 	}
 
 	public void setNoteID(String noteID) {

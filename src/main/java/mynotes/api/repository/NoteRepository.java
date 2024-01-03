@@ -10,5 +10,6 @@ import mynotes.api.entity.Note;
 @Repository
 public interface NoteRepository extends JpaRepository<Note, Long>{
 	public List<Note> getNoteByAuthor(String author);
+	public Note getNoteByNoteID(String noteID);
 	public void deleteByNoteID(String noteID);
 }

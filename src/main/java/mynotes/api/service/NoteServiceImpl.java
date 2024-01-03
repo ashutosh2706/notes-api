@@ -18,7 +18,12 @@ public class NoteServiceImpl implements NoteService {
 	public Note saveNote(Note note) {
 		return noteRepository.save(note);
 	}
-	
+
+	@Override
+	public Note getNoteByNoteId(String noteID) {
+		return noteRepository.getNoteByNoteID(noteID);
+	}
+
 	public List<Note> getAllNotes() {
 		return noteRepository.findAll();
 	}

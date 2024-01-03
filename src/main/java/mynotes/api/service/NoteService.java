@@ -9,6 +9,7 @@ import mynotes.api.entity.Note;
 @Service
 public interface NoteService {
 	public Note saveNote(Note note);
+	public Note getNoteByNoteId(String noteID);
 	public List<Note> getAllNotes();
 	public List<Note> getNotesByAuthor(String author);
 	public void deleteNote(String noteID);

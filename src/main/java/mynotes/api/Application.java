@@ -1,20 +1,22 @@
 package mynotes.api;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
+import mynotes.api.service.DownloadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.core.io.Resource;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import mynotes.api.entity.Note;
@@ -26,6 +28,7 @@ import mynotes.api.service.UserServiceImpl;
 @RestController
 @EntityScan("mynotes.api.entity")
 @RequestMapping("api")
+@CrossOrigin(origins = "http://localhost:3000")
 public class Application {
 	
 	@Autowired
@@ -33,7 +36,12 @@ public class Application {
 	
 	@Autowired
 	private UserServiceImpl userService;
-	
+
+	@Autowired
+	private DownloadService downloadService;
+
+	public static final String UPLOAD_DIR = "uploads";
+
 	@GetMapping("/")
 	public String welcomePage() throws IOException {
 		return "API is started and running...";
@@ -51,7 +59,18 @@ public class Application {
 				ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null) : 
 					ResponseEntity.status(HttpStatus.OK).body(this.noteService.getNotesByAuthor(user));
 	}
-	
+
+	@GetMapping("/download/{noteId}")
+	public ResponseEntity<Resource> downloadFile(@PathVariable String noteId) {
+		Resource resource = this.downloadService.loadFileAsResource(this.noteService.getNoteByNoteId(noteId).getFileName());
+
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_OCTET_STREAM)
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+				.body(resource);
+	}
+
+
 	@PostMapping("/register")
 	public ResponseEntity<?> registerUser(@RequestParam String username, @RequestParam String password) {
 		if(this.userService.getUserByUserName(username) == null) {
@@ -70,26 +89,58 @@ public class Application {
 	@PostMapping("/login")
 	public ResponseEntity<?> loginUser(@RequestParam String username, @RequestParam String password) {
 		User retUser = this.userService.getUserByUserName(username);
-		if(retUser == null)
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found");
 
-		return retUser.getPassword().equals(password) ? 
-				ResponseEntity.status(HttpStatus.OK).body("Login Successful") : 
+		if(retUser == null) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found");
+		}
+
+		return retUser.getPassword().equals(password) ?
+				ResponseEntity.status(HttpStatus.OK).body("Login Successful") :
 					ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Wrong Password");
 	}
 	
 	
 	@PostMapping("/upload")
-	public ResponseEntity<?> uploadNote(@RequestParam("file") MultipartFile file, @RequestParam("filename") String fileName, 
+	public ResponseEntity<?> uploadNote(@RequestParam("file") MultipartFile file,
 			@RequestParam("subject") String subject, @RequestParam("user") String user) {
-		
-		
-		
-		
-		return ResponseEntity.status(HttpStatus.OK).body(null);
+
+		Note note = new Note();
+		note.setAuthor(user);
+		note.setFileName(file.getOriginalFilename());
+		note.setSubject(subject);
+		LocalDate currentDate = LocalDate.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+		note.setUploadDate(currentDate.format(formatter));
+		note.setNoteID(UUID.randomUUID().toString());
+
+		if (!file.isEmpty()) {
+			try {
+				String folderPath = UPLOAD_DIR + File.separator;
+				File folder = new File(folderPath);
+				if (!folder.exists()) folder.mkdirs();
+
+				String filePath = folderPath + file.getOriginalFilename();
+				OutputStream outputStream = new FileOutputStream(filePath);
+				outputStream.write(file.getBytes());
+				outputStream.close();
+				long sz = file.getSize();
+				double fileSizeInMegabytes = (double) sz / (1024 * 1024);
+				String fileSize = String.format("%.2f MB", fileSizeInMegabytes);
+				note.setSize(fileSize);
+				this.noteService.saveNote(note);
+				System.out.println("Note saved");
+
+				return ResponseEntity.status(HttpStatus.OK).body("OK");
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred in backend api");
+			}
+		} else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Empty file received");
+		}
 		
 	}
-	
 	
 	@PostMapping("/delete/{id}")
 	public ResponseEntity<?> deleteNote(@PathVariable String noteID) {
