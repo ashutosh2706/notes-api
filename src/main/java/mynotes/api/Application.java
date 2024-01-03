@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -63,10 +66,14 @@ public class Application {
 	@GetMapping("/download/{noteId}")
 	public ResponseEntity<Resource> downloadFile(@PathVariable String noteId) {
 		Resource resource = this.downloadService.loadFileAsResource(this.noteService.getNoteByNoteId(noteId).getFileName());
-
+		
+		// update the download_cnt
+		this.noteService.updateDownloadCount(noteId);
+		
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_OCTET_STREAM)
 				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+				.header("Access-Control-Expose-Headers", "Content-Disposition")	// required to expose the content-disposition header
 				.body(resource);
 	}
 
@@ -142,11 +149,20 @@ public class Application {
 		
 	}
 	
-	@PostMapping("/delete/{id}")
-	public ResponseEntity<?> deleteNote(@PathVariable String noteID) {
+	@PostMapping("/delete")
+	public ResponseEntity<?> deleteNote(@RequestParam("noteId") String noteID) {
 		
+		String filePath = UPLOAD_DIR + "/" + this.noteService.getNoteByNoteId(noteID).getFileName();
 		
-		return ResponseEntity.status(HttpStatus.OK).body(null);
+		try {
+			Path path = Paths.get(filePath);
+			Files.delete(path);
+			this.noteService.deleteNote(noteID);
+			return ResponseEntity.status(HttpStatus.OK).body("OK");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred at backend api");
+		}
 	}
 	
 	
